@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JIRA to Bulletpoints Converter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>JIRA to Bulletpoints Converter</h1>
+            <p>Transform your JIRA exports into organized bulletpoints</p>
+        </header>
+
+        <main>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-step active" data-step="1">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Upload</div>
+                    </div>
+                    <div class="progress-line">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="progress-step" data-step="2">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Configure</div>
+                    </div>
+                    <div class="progress-line">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="progress-step" data-step="3">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Download</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="phase1" class="phase active">
+                <div class="content-wrapper">
+                    <div class="info-section">
+						<h2>How to export work items from Jira:</h2>
+                        <h3>Export work items from a specific Jira project</h3>
+                        <ol>
+                            <li>Navigate to your project</li>
+                            <li>Select <strong>Issues</strong>
+                                <ul>
+                                    <li>Optional: Edit the filter query to return a specific list of work items</li>
+                                </ul>
+                            </li>
+                            <li>Select <strong>Export → Export CSV (all fields)</strong></li>
+                        </ol>
+                        
+                        <h3>Export work items with Global search</h3>
+                        <ol>
+                            <li>From any page in Jira, select <strong>Search → View all issues</strong></li>
+                            <li>Enter your desired search query to return work items of your choice</li>
+                            <li>Select <strong>Export → Export CSV (all fields)</strong></li>
+                        </ol>
+                        
+                        <div class="info-box">
+                            <h4>Export Jira comments to CSV</h4>
+                            <p>In order to export the Comments field from Jira, please follow the above steps and use the <strong>Export CSV (all fields)</strong> option to export them. The exported CSV file will properly contain all fields, including each comment made. Each comment will be mapped in a different "Comment" column in chronological order.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="upload-section">
+                        <div class="upload-box" id="uploadBox">
+                            <div class="upload-icon">+</div>
+                            <p>Drop your CSV file here or click to browse</p>
+                            <input type="file" id="csvFileInput" accept=".csv" hidden>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="phase2" class="phase">
+                <div class="content-wrapper">
+                    <h2>Configure Processing Options</h2>
+                    
+                    <div class="section">
+                        <p>Fields that will be processed by AI:</p>
+                        <div id="fieldsContainer" class="fields-container"></div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="form-group">
+                            <label for="aiPrompt">AI Prompt (Optional)</label>
+                            <textarea id="aiPrompt" placeholder="Enter your AI prompt here..."></textarea>
+                        </div>
+                        
+                        <div class="expandable-section">
+                            <button type="button" class="expandable-toggle" id="systemPromptToggle">
+                                <span>System Prompt (Advanced)</span>
+                                <span class="arrow">▼</span>
+                            </button>
+                            <div class="expandable-content" id="systemPromptContent">
+                                <textarea id="systemPrompt" placeholder="System prompt will be pre-filled here..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="actions">
+                        <button id="backBtn" class="btn btn-secondary">Back</button>
+                        <button id="processBtn" class="btn btn-primary">Process File</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="phase3" class="phase">
+                <div class="content-wrapper">
+                    <h2>Download Results</h2>
+                    <div class="success-message">
+                        <div class="success-icon">✓</div>
+                        <h3>Processing Complete!</h3>
+                        <p>Your file has been successfully processed.</p>
+                        <button id="downloadBtn" class="btn btn-primary">Download Processed File</button>
+                    </div>
+                    <div class="actions">
+                        <button id="startOverBtn" class="btn btn-secondary">Start Over</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loader" class="loader hidden">
+                <div class="spinner"></div>
+                <p id="loaderText">Processing your file...</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

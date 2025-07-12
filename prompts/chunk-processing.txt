@@ -1,0 +1,16 @@
+Please convert the following JIRA data into organized bulletpoints:
+
+{{JIRA_DATA}}
+
+{{USER_PROMPT}}
+
+Please organize this information into clear, actionable bulletpoints. Group related items together and create a logical hierarchy.
+
+FORMATTING REQUIREMENTS:
+- Each bullet point must be on its own line
+- Keep single bullet point even if it contains multiple sentences - do not split
+- Add exactly 2 new lines after each bullet point
+- Use clear, actionable language
+- Focus on the most important information from each JIRA item
+- Remove redundant or empty fields
+- Group similar items together where logical 

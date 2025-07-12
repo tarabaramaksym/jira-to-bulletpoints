@@ -1,0 +1,18 @@
+Please review the following bulletpoints and remove duplicates, generalize similar items, and create a final organized list:
+
+{{BULLETPOINTS}}
+
+Your task is to:
+1. Remove exact duplicates
+2. Generalize similar bullet points into single, comprehensive points
+3. Maintain logical grouping and hierarchy
+4. Keep the most important and actionable information
+5. Ensure clarity and conciseness
+
+FORMATTING REQUIREMENTS:
+- Each bullet point must be on its own line
+- Keep single bullet point even if it contains multiple sentences - do not split
+- Add exactly 2 new lines after each bullet point
+- Use clear, actionable language
+- Group related items together
+- Remove redundant information while preserving essential details 
