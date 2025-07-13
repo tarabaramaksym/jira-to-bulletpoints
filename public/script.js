@@ -5,6 +5,8 @@ class JiraConverter {
         this.csvHeaders = [];
         this.filename = '';
         this.selectedFields = new Set();
+        this.achievements = [];
+        this.selectedAchievements = new Set();
         this.downloadUrl = '';
         
         this.initializeElements();
@@ -16,7 +18,8 @@ class JiraConverter {
         this.phases = {
             1: document.getElementById('phase1'),
             2: document.getElementById('phase2'),
-            3: document.getElementById('phase3')
+            3: document.getElementById('phase3'),
+            4: document.getElementById('phase4')
         };
         
         this.progressSteps = document.querySelectorAll('.progress-step');
@@ -24,11 +27,12 @@ class JiraConverter {
         this.csvFileInput = document.getElementById('csvFileInput');
         this.fieldsContainer = document.getElementById('fieldsContainer');
         this.aiPromptTextarea = document.getElementById('aiPrompt');
-        this.systemPromptTextarea = document.getElementById('systemPrompt');
-        this.systemPromptToggle = document.getElementById('systemPromptToggle');
-        this.systemPromptContent = document.getElementById('systemPromptContent');
         this.backBtn = document.getElementById('backBtn');
         this.processBtn = document.getElementById('processBtn');
+        this.achievementsContainer = document.getElementById('achievementsContainer');
+        this.additionalPromptTextarea = document.getElementById('additionalPrompt');
+        this.backToConfigBtn = document.getElementById('backToConfigBtn');
+        this.reprocessBtn = document.getElementById('reprocessBtn');
         this.downloadBtn = document.getElementById('downloadBtn');
         this.startOverBtn = document.getElementById('startOverBtn');
         this.loader = document.getElementById('loader');
@@ -39,9 +43,10 @@ class JiraConverter {
         this.uploadBox.addEventListener('click', () => this.csvFileInput.click());
         this.csvFileInput.addEventListener('change', (e) => this.handleFileSelect(e));
         
-        this.systemPromptToggle.addEventListener('click', () => this.toggleSystemPrompt());
         this.backBtn.addEventListener('click', () => this.goToPhase(1));
         this.processBtn.addEventListener('click', () => this.processFile());
+        this.backToConfigBtn.addEventListener('click', () => this.goToPhase(2));
+        this.reprocessBtn.addEventListener('click', () => this.reprocessAchievements());
         this.downloadBtn.addEventListener('click', () => this.downloadFile());
         this.startOverBtn.addEventListener('click', () => this.startOver());
         
@@ -122,7 +127,10 @@ class JiraConverter {
     
     setupPhase2() {
         this.renderFieldsSelection();
-        this.systemPromptTextarea.value = 'You are a helpful assistant that converts JIRA data into organized bulletpoints. Please maintain the structure and hierarchy of the information while making it more readable and actionable.';
+    }
+    
+    setupPhase3() {
+        this.renderAchievementsSelection();
     }
     
     renderFieldsSelection() {
@@ -159,15 +167,106 @@ class JiraConverter {
         }
     }
     
-    toggleSystemPrompt() {
-        const isActive = this.systemPromptContent.classList.contains('active');
+    renderAchievementsSelection() {
+        this.achievementsContainer.innerHTML = '';
         
-        if (isActive) {
-            this.systemPromptContent.classList.remove('active');
-            this.systemPromptToggle.classList.remove('active');
+        // Add header with select all/none actions
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'achievements-header';
+        headerDiv.innerHTML = `
+            <h3>Select achievements to include:</h3>
+            <div class="achievements-actions">
+                <button class="btn" id="selectAllBtn">Select All</button>
+                <button class="btn" id="selectNoneBtn">Select None</button>
+            </div>
+        `;
+        this.achievementsContainer.appendChild(headerDiv);
+        
+        // Add event listeners for select all/none
+        document.getElementById('selectAllBtn').addEventListener('click', () => {
+            this.selectedAchievements = new Set(this.achievements);
+            this.renderAchievementsSelection();
+        });
+        
+        document.getElementById('selectNoneBtn').addEventListener('click', () => {
+            this.selectedAchievements.clear();
+            this.renderAchievementsSelection();
+        });
+        
+        // Render individual achievements
+        this.achievements.forEach((achievement, index) => {
+            const achievementItem = document.createElement('div');
+            achievementItem.className = 'achievement-item';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'achievement-checkbox';
+            checkbox.id = `achievement-${index}`;
+            checkbox.checked = this.selectedAchievements.has(achievement);
+            checkbox.addEventListener('change', () => this.toggleAchievement(achievement));
+            
+            const text = document.createElement('div');
+            text.className = 'achievement-text';
+            text.textContent = achievement;
+            text.addEventListener('click', () => {
+                checkbox.checked = !checkbox.checked;
+                this.toggleAchievement(achievement);
+            });
+            
+            achievementItem.appendChild(checkbox);
+            achievementItem.appendChild(text);
+            
+            if (!this.selectedAchievements.has(achievement)) {
+                achievementItem.classList.add('disabled');
+            }
+            
+            this.achievementsContainer.appendChild(achievementItem);
+        });
+    }
+    
+    toggleAchievement(achievement) {
+        if (this.selectedAchievements.has(achievement)) {
+            this.selectedAchievements.delete(achievement);
         } else {
-            this.systemPromptContent.classList.add('active');
-            this.systemPromptToggle.classList.add('active');
+            this.selectedAchievements.add(achievement);
+        }
+        this.renderAchievementsSelection();
+    }
+    
+    async reprocessAchievements() {
+        if (this.selectedAchievements.size === 0) {
+            alert('Please select at least one achievement to include.');
+            return;
+        }
+        
+        this.showLoader('Applying changes and finalizing...');
+        
+        const requestData = {
+            selectedAchievements: Array.from(this.selectedAchievements),
+            additionalPrompt: this.additionalPromptTextarea.value.trim()
+        };
+        
+        try {
+            const response = await fetch('/reprocess', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.downloadUrl = result.downloadUrl;
+                this.goToPhase(4);
+            } else {
+                alert('Reprocessing failed: ' + result.error);
+            }
+        } catch (error) {
+            alert('Reprocessing failed: ' + error.message);
+        } finally {
+            this.hideLoader();
         }
     }
     
@@ -177,12 +276,11 @@ class JiraConverter {
             return;
         }
         
-        this.showLoader('Processing file...');
+        this.showLoader('Processing file, this may take a while, please don\'t close this tab...');
         
         const requestData = {
             selectedFields: Array.from(this.selectedFields),
             aiPrompt: this.aiPromptTextarea.value.trim(),
-            systemPrompt: this.systemPromptTextarea.value.trim()
         };
         
         try {
@@ -197,7 +295,9 @@ class JiraConverter {
             const result = await response.json();
             
             if (result.success) {
-                this.downloadUrl = result.downloadUrl;
+                this.achievements = result.achievements;
+                this.selectedAchievements = new Set(result.achievements);
+                this.setupPhase3();
                 this.goToPhase(3);
             } else {
                 alert('Processing failed: ' + result.error);
@@ -235,15 +335,15 @@ class JiraConverter {
         this.csvHeaders = [];
         this.filename = '';
         this.selectedFields = new Set();
+        this.achievements = [];
+        this.selectedAchievements = new Set();
         this.downloadUrl = '';
         
         this.csvFileInput.value = '';
         this.aiPromptTextarea.value = '';
-        this.systemPromptTextarea.value = '';
+        this.additionalPromptTextarea.value = '';
         this.fieldsContainer.innerHTML = '';
-        
-        this.systemPromptContent.classList.remove('active');
-        this.systemPromptToggle.classList.remove('active');
+        this.achievementsContainer.innerHTML = '';
         
         this.goToPhase(1);
     }

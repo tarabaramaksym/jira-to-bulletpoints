@@ -32,6 +32,13 @@
                     </div>
                     <div class="progress-step" data-step="3">
                         <div class="step-circle">3</div>
+                        <div class="step-label">Review</div>
+                    </div>
+                    <div class="progress-line">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="progress-step" data-step="4">
+                        <div class="step-circle">4</div>
                         <div class="step-label">Download</div>
                     </div>
                 </div>
@@ -89,16 +96,6 @@
                             <label for="aiPrompt">AI Prompt (Optional)</label>
                             <textarea id="aiPrompt" placeholder="Enter your AI prompt here..."></textarea>
                         </div>
-                        
-                        <div class="expandable-section">
-                            <button type="button" class="expandable-toggle" id="systemPromptToggle">
-                                <span>System Prompt (Advanced)</span>
-                                <span class="arrow">▼</span>
-                            </button>
-                            <div class="expandable-content" id="systemPromptContent">
-                                <textarea id="systemPrompt" placeholder="System prompt will be pre-filled here..."></textarea>
-                            </div>
-                        </div>
                     </div>
                     
                     <div class="actions">
@@ -109,6 +106,29 @@
             </div>
 
             <div id="phase3" class="phase">
+                <div class="content-wrapper">
+                    <h2>Review & Edit Results</h2>
+                    <p>Review your processed achievements and toggle off any you don't want to include:</p>
+                    
+                    <div id="achievementsContainer" class="achievements-container">
+                        <!-- Achievements will be populated here -->
+                    </div>
+                    
+                    <div class="section">
+                        <div class="form-group">
+                            <label for="additionalPrompt">Additional Processing (Optional)</label>
+                            <textarea id="additionalPrompt" placeholder="Enter additional instructions to modify the selected achievements (e.g., simplify language, translate, etc.)..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="actions">
+                        <button id="backToConfigBtn" class="btn btn-secondary">Back to Configure</button>
+                        <button id="reprocessBtn" class="btn btn-primary">Apply Changes & Continue</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="phase4" class="phase">
                 <div class="content-wrapper">
                     <h2>Download Results</h2>
                     <div class="success-message">
