@@ -1,18 +1,27 @@
-Please review the following bulletpoints and remove duplicates, generalize similar items, and create a final organized list:
+Review the following resume achievements and create a final, polished list suitable for a professional resume:
 
 {{BULLETPOINTS}}
 
 Your task is to:
-1. Remove exact duplicates
-2. Generalize similar bullet points into single, comprehensive points
-3. Maintain logical grouping and hierarchy
-4. Keep the most important and actionable information
-5. Ensure clarity and conciseness
+1. Remove exact duplicates and redundant achievements
+2. Combine similar accomplishments into stronger, more comprehensive statements
+3. Prioritize the most impressive and broadly applicable achievements
+4. Ensure each point demonstrates clear technical expertise and transferable skills
+5. Maintain professional resume language and formatting
 
-FORMATTING REQUIREMENTS:
-- Each bullet point must be on its own line
-- Keep single bullet point even if it contains multiple sentences - do not split
-- Add exactly 2 new lines after each bullet point
-- Use clear, actionable language
-- Group related items together
-- Remove redundant information while preserving essential details 
+ENHANCEMENT STRATEGIES:
+- Combine multiple related technical implementations into broader expertise statements
+- Focus on technologies and methodologies rather than specific business features
+- Strengthen statements by emphasizing technical skills and general applicability
+- Group similar achievements under broader technical categories
+- Eliminate overly specific implementation details that limit applicability
+- Emphasize technology stack experience and general problem-solving skills
+
+FINAL FORMATTING:
+- Each achievement on its own line
+- Professional, past-tense language
+- Add exactly 2 new lines after each point
+- Start with strong action verbs
+- Focus on transferable skills and technology experience
+- NO percentages or quantifiable metrics
+- Emphasize broad applicability across different roles and industries 
