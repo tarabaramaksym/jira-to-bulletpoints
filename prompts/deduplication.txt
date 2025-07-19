@@ -16,12 +16,11 @@ ENHANCEMENT STRATEGIES:
 - Group similar achievements under broader technical categories
 - Eliminate overly specific implementation details that limit applicability
 - Emphasize technology stack experience and general problem-solving skills
+- Add additional points (if a lot of tasks talk about styling, add additional point talking about how much work was done for styling, keep the wording similar to other points)
 
 FINAL FORMATTING:
 - Each achievement on its own line
 - Professional, past-tense language
 - Add exactly 2 new lines after each point
-- Start with strong action verbs
 - Focus on transferable skills and technology experience
-- NO percentages or quantifiable metrics
-- Emphasize broad applicability across different roles and industries 
+- Emphasize broad applicability across different roles and industries
