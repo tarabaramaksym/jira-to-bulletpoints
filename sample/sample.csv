@@ -1,0 +1,40 @@
+Summary,Priority,Status,Description,Comments
+Optimize database query performance for user search,High,Done,"User search queries taking 3-5 seconds. Need to implement indexing and caching to reduce response time to under 500ms.","15/Aug/25 2:30 PM;630338f39a460a36a1ed3de7;Added composite indexes and Redis caching. Search time reduced from 3.2s to 320ms. Database CPU usage down 60%. Total effort: 16 hours"
+
+Implement JWT authentication for API endpoints,Medium,In Progress,"Replace basic authentication with JWT tokens. Need token expiration, refresh mechanism, and rate limiting integration.","12/Aug/25 10:15 AM;630338f39a460a36a1ed3de7;JWT service completed using jsonwebtoken library. Added middleware and refresh token rotation. Integration testing in progress. ETA: 3 days"
+
+Migrate legacy XML API to REST JSON,High,To Do,"Legacy SOAP/XML API is slow and hard to maintain. Create new REST endpoints with JSON responses while keeping backward compatibility.","10/Aug/25 4:45 PM;630338f39a460a36a1ed3de7;Analyzed 15 core endpoints for migration. Designed OpenAPI spec. Estimated 40% performance improvement. Total estimate: 24 hours"
+
+Implement real-time notifications with WebSockets,Medium,Done,"Users must refresh page to see updates. Add WebSocket connection for instant notifications and real-time collaboration features.","18/Aug/25 1:20 PM;630338f39a460a36a1ed3de7;Implemented Socket.io with Redis adapter for scaling. Added notification queuing and offline message storage. 95% delivery rate achieved"
+
+Fix memory leak in file upload service,Critical,Done,"File upload service consuming excessive memory during large uploads. Memory usage grows indefinitely until server restart required.","22/Aug/25 11:30 AM;630338f39a460a36a1ed3de7;Found issue in multer stream handling. Implemented proper cleanup and streaming. Memory usage now stable under 200MB during uploads"
+
+Summary,Priority,Status,Description,Comments
+Change "Submit" button text to "Send Message",Low,Done,"Marketing team wants the contact form submit button to say 'Send Message' instead of 'Submit' for better UX.","26/Aug/25 10:15 AM;630338f39a460a36a1ed3de7;Updated button text in ContactForm.jsx. Changed translation keys in en.json, fr.json, de.json. Pushed to production."
+
+Adjust primary button color to brand blue,Low,Done,"Primary buttons currently using #007bff but brand guidelines specify #1e3a8a. Update CSS variables.","26/Aug/25 11:30 AM;630338f39a460a36a1ed3de7;Updated --primary-color in styles/variables.css. Verified contrast ratio meets WCAG standards. All buttons now consistent."
+
+Fix typo in error message,Trivial,Done,"Error message says 'Passowrd is required' instead of 'Password is required'. Fix spelling mistake.","25/Aug/25 3:20 PM;630338f39a460a36a1ed3de7;Fixed typo in validation.js line 45. Updated corresponding test cases. Deployed hotfix."
+
+Translate 'Dashboard' to German,Low,Done,"German users seeing 'Dashboard' in English. Should be 'Armaturenbrett' according to translation team.","24/Aug/25 9:00 AM;630338f39a460a36a1ed3de7;Added german translation to i18n/de.json. Verified with native German speaker. Translation now displays correctly."
+
+Increase font size on mobile for better readability,Low,Done,"Text too small on mobile devices. Increase base font size from 14px to 16px for better accessibility.","23/Aug/25 2:45 PM;630338f39a460a36a1ed3de7;Updated mobile.css with font-size: 16px for body text. Tested on various devices. Improves readability significantly."
+
+Remove debug console.log statements,Trivial,Done,"Found several console.log statements left in production code. Clean up before next release.","22/Aug/25 4:30 PM;630338f39a460a36a1ed3de7;Removed 12 console.log statements from userService.js and productService.js. Added ESLint rule to prevent future occurrences."
+
+Update footer copyright year to 2024,Trivial,Done,"Footer still shows 'Copyright 2023'. Update to current year.","21/Aug/25 1:15 PM;630338f39a460a36a1ed3de7;Updated Footer.jsx with dynamic year calculation. Will automatically update each year now."
+
+Change loading spinner color to match theme,Low,Done,"Loading spinner is currently gray but should match the primary theme color for consistency.","20/Aug/25 5:00 PM;630338f39a460a36a1ed3de7;Updated spinner.css to use CSS variable --primary-color. Spinner now matches brand theme."
+
+Add missing alt text to hero image,Low,Done,"Accessibility audit found hero image missing alt attribute. Add descriptive alt text for screen readers.","19/Aug/25 8:45 AM;630338f39a460a36a1ed3de7;Added alt='Team collaboration in modern office environment' to hero image. Accessibility score improved."
+
+Implement feature flag system for gradual rollouts,High,In Progress,"Need ability to toggle features on/off for specific user groups. Implement feature flag service with Redis backend.","18/Aug/25 10:00 AM;630338f39a460a36a1ed3de7;Basic feature flag service implemented. Redis integration complete. Working on admin interface for flag management. ETA: 3 days"
+
+Fix dropdown menu z-index issue,Medium,Done,"Dropdown menu appearing behind modal dialogs. Need to adjust z-index values to fix layering.","17/Aug/25 3:30 PM;630338f39a460a36a1ed3de7;Increased dropdown z-index from 1000 to 9999. Created z-index hierarchy documentation. Issue resolved."
+
+Add dark mode toggle,Medium,To Do,"Users requesting dark mode option. Implement theme switcher with localStorage persistence.","16/Aug/25 7:20 AM;630338f39a460a36a1ed3de7;Researched CSS custom properties approach. Will implement toggle in header with system preference detection. Estimate: 8 hours"
+Upgrade Node.js from v16 to v20,Medium,Done,"Current Node.js v16 approaching end-of-life. Upgrade to v20 for security patches and performance improvements.","20/Aug/25 2:10 PM;630338f39a460a36a1ed3de7;Upgraded successfully with zero breaking changes. Performance tests show 15% improvement in response times. Updated all Docker images"
+
+Create admin dashboard for user management,Low,In Progress,"Admins currently manage users through direct database access. Need web interface for user CRUD operations and role management.","16/Aug/25 8:30 AM;630338f39a460a36a1ed3de7;React dashboard 70% complete. User list, search, and edit forms implemented. Role management and bulk operations remaining. ETA: 1 week"
+
+Fix cross-browser compatibility issues,Medium,Done,"Application not working properly in Safari and older Chrome versions. CSS grid and ES6 features causing compatibility problems.","25/Aug/25 4:00 PM;630338f39a460a36a1ed3de7;Added Babel transpilation and CSS fallbacks. Implemented feature detection for grid support. Tested on Safari 14+ and Chrome 80+"

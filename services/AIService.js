@@ -102,34 +102,6 @@ class AIService {
         }
     }
 
-    async generateSummary(jiraData, totalItems) {
-        try {
-            const prompt = `Please provide a brief summary of this JIRA data:\n\n${jiraData}\n\nTotal items: ${totalItems}`;
-            
-            const response = await this.client.chat.completions.create({
-                model: "gpt-4o-mini",
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are a helpful assistant that provides concise summaries of JIRA data."
-                    },
-                    {
-                        role: "user",
-                        content: prompt
-                    }
-                ],
-                temperature: 0.3,
-                max_tokens: 200
-            });
-
-            return response.choices[0].message.content.trim();
-            
-        } catch (error) {
-            console.error('Error generating summary:', error);
-            throw error;
-        }
-    }
-
     async reprocessAchievements(achievementsText, additionalPrompt) {
         const prompt = `Please reprocess the following achievements based on the additional instructions:
 

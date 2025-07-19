@@ -118,10 +118,6 @@ class CSVProcessor {
             Object.entries(item).forEach(([key, value]) => {
                 if (value && value.trim()) {
                     formattedData += `- ${key}: ${value}\n`;
-
-					if (index % 10 === 0) {
-						console.log(key, value)
-					}
                 }
             });
             formattedData += '\n';

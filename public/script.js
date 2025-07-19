@@ -29,6 +29,7 @@ class JiraConverter {
         this.aiPromptTextarea = document.getElementById('aiPrompt');
         this.backBtn = document.getElementById('backBtn');
         this.processBtn = document.getElementById('processBtn');
+		this.achievementsContainerParent = document.getElementById('achievementsContainerParent');
         this.achievementsContainer = document.getElementById('achievementsContainer');
         this.additionalPromptTextarea = document.getElementById('additionalPrompt');
         this.backToConfigBtn = document.getElementById('backToConfigBtn');
@@ -169,19 +170,7 @@ class JiraConverter {
     
     renderAchievementsSelection() {
         this.achievementsContainer.innerHTML = '';
-        
-        // Add header with select all/none actions
-        const headerDiv = document.createElement('div');
-        headerDiv.className = 'achievements-header';
-        headerDiv.innerHTML = `
-            <h3>Select achievements to include:</h3>
-            <div class="achievements-actions">
-                <button class="btn" id="selectAllBtn">Select All</button>
-                <button class="btn" id="selectNoneBtn">Select None</button>
-            </div>
-        `;
-        this.achievementsContainer.appendChild(headerDiv);
-        
+    
         // Add event listeners for select all/none
         document.getElementById('selectAllBtn').addEventListener('click', () => {
             this.selectedAchievements = new Set(this.achievements);
