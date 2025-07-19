@@ -10,7 +10,7 @@ A modern web application that converts JIRA CSV exports into organized, AI-proce
 - **AI Processing**: Convert JIRA data into organized bulletpoints
 - **Chunked Processing**: Handles large datasets (500 records per chunk)
 - **Smart Deduplication**: Removes duplicate and similar bulletpoints
-- **Memory-Based**: No file storage - everything processed in memory/session
+- **Secure Temporary Storage**: Files stored temporarily in secure directory during processing
 
 ### 🎨 **User Experience**
 - **3-Phase Workflow**: Upload → Configure → Download
@@ -142,9 +142,10 @@ Use VS Code/Cursor F5 debugging:
 - `npm test` - Run tests (placeholder)
 
 ### **Session Management**
-- **Memory-based**: No file storage
-- **Auto-cleanup**: Sessions cleaned after download/restart
-- **Timeout**: 2-hour session expiration
+- **Temporary File Storage**: Files stored securely in temp directory during processing
+- **Auto-cleanup**: Files deleted after download/processing completion
+- **Periodic Cleanup**: Orphaned files cleaned up every hour
+- **Timeout**: 2-hour file expiration with graceful shutdown cleanup
 
 ## Technologies Used
 
