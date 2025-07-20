@@ -19,22 +19,154 @@ body {
 }
 
 header {
-    text-align: center;
-    padding: 30px 0 20px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     margin-bottom: 30px;
+    padding: 35px 0 25px;
+    box-shadow: 0 2px 20px rgba(102, 126, 234, 0.15);
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+}
+
+.header-main {
+    text-align: left;
+    flex: 1;
 }
 
 header h1 {
-    font-size: 1.8rem;
+    font-size: 2rem;
     margin-bottom: 8px;
     font-weight: 700;
+    letter-spacing: -0.5px;
 }
 
 header p {
-    font-size: 1rem;
+    font-size: 1.1rem;
     opacity: 0.9;
+    margin: 0;
+}
+
+.header-author {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    text-align: right;
+}
+
+.author-text {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    white-space: nowrap;
+}
+
+.author-text strong {
+    font-weight: 600;
+}
+
+.author-links {
+    display: flex;
+    gap: 6px;
+	flex-wrap: wrap;
+}
+
+.author-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    padding: 6px 10px;
+    color: white;
+    white-space: nowrap;
+}
+
+.author-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    color: white;
+}
+
+.link-text {
+    font-size: 12px;
+    opacity: 0.8;
+    font-weight: 500;
+}
+
+.link-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.link-icon img {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+}
+
+.link-handle {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.email-icon {
+    font-weight: bold;
+    font-family: monospace;
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+    
+    .header-main {
+        text-align: center;
+    }
+    
+    .header-author {
+        align-items: center;
+        text-align: center;
+    }
+    
+    .author-links {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .author-link {
+        font-size: 11px;
+        padding: 5px 8px;
+    }
+    
+    .link-text, .link-handle {
+        font-size: 11px;
+    }
+    
+    header h1 {
+        font-size: 1.7rem;
+    }
+    
+    header p {
+        font-size: 1rem;
+    }
 }
 
 .progress-container {
@@ -663,6 +795,8 @@ header p {
 .partial-results::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
 }
+
+
 
 @media (max-width: 768px) {
     .container {
