@@ -248,6 +248,7 @@ header p {
 
 #phase1 .upload-section {
     flex: 0 0 350px;
+	flex-direction: column;
 }
 
 .upload-box {
@@ -609,6 +610,40 @@ header p {
 
 .results-content div:last-child {
     border-bottom: none;
+}
+
+.sample-download {
+    text-align: center;
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.sample-download span {
+	display: inline-flex;
+}
+
+.sample-download p {
+    margin: 0 0 10px 0;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.sample-link {
+    color: #10b981;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sample-link:hover {
+    color: #059669;
+    text-decoration: underline;
 }
 
 .partial-results::-webkit-scrollbar {

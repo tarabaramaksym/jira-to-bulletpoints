@@ -641,6 +641,18 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+app.get('/sample-csv', (req, res) => {
+  const samplePath = path.join(__dirname, 'sample', 'sample.csv');
+  
+  if (fs.existsSync(samplePath)) {
+    res.setHeader('Content-disposition', 'attachment; filename="jira-sample.csv"');
+    res.setHeader('Content-type', 'text/csv');
+    res.sendFile(samplePath);
+  } else {
+    res.status(404).json({ error: 'Sample file not found' });
+  }
+});
+
 app.post('/upload', upload.single('csvFile'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });

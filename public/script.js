@@ -511,6 +511,8 @@ class JiraConverter {
         }
     }
     
+
+
     hideConnectionError() {
         const existingError = document.querySelector('.connection-error');
         if (existingError) {
