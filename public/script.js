@@ -16,6 +16,9 @@ class JiraConverter {
         this.setupEventListeners();
         this.setupDragAndDrop();
         this.connectWebSocket();
+        
+        // Set initial favicon to note emoji
+        this.setFavicon('📝');
     }
     
     initializeElements() {
@@ -96,6 +99,8 @@ class JiraConverter {
         
         this.socket.on('processing-started', (data) => {
             console.log('Processing started:', data);
+            // Reset favicon to note emoji when processing starts
+            this.setFavicon('📝');
             this.updateProgress(0, data.message);
         });
         
@@ -122,6 +127,9 @@ class JiraConverter {
             this.hideLoader();
             this.isProcessing = false;
             this.canCancel = false;
+            
+            // Change favicon to checkmark when processing is done
+            this.setFavicon('✅');
             
             if (data.downloadReady) {
                 this.downloadUrl = '/download';
@@ -359,6 +367,9 @@ class JiraConverter {
             console.warn('Cleanup failed:', error);
         }
         
+        // Reset favicon back to note emoji when starting over
+        this.setFavicon('📝');
+        
         this.currentPhase = 1;
         this.uploadedFile = null;
         this.csvHeaders = [];
@@ -512,6 +523,20 @@ class JiraConverter {
     }
     
 
+
+    setFavicon(emoji) {
+        // Remove existing favicon
+        const existingFavicon = document.querySelector('link[rel="icon"]');
+        if (existingFavicon) {
+            existingFavicon.remove();
+        }
+        
+        // Create new favicon with the specified emoji
+        const favicon = document.createElement('link');
+        favicon.rel = 'icon';
+        favicon.href = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${emoji}</text></svg>`;
+        document.head.appendChild(favicon);
+    }
 
     hideConnectionError() {
         const existingError = document.querySelector('.connection-error');
