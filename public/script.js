@@ -8,10 +8,14 @@ class JiraConverter {
         this.achievements = [];
         this.selectedAchievements = new Set();
         this.downloadUrl = '';
+        this.socket = null;
+        this.isProcessing = false;
+        this.canCancel = false;
         
         this.initializeElements();
         this.setupEventListeners();
         this.setupDragAndDrop();
+        this.connectWebSocket();
     }
     
     initializeElements() {
@@ -29,7 +33,6 @@ class JiraConverter {
         this.aiPromptTextarea = document.getElementById('aiPrompt');
         this.backBtn = document.getElementById('backBtn');
         this.processBtn = document.getElementById('processBtn');
-		this.achievementsContainerParent = document.getElementById('achievementsContainerParent');
         this.achievementsContainer = document.getElementById('achievementsContainer');
         this.additionalPromptTextarea = document.getElementById('additionalPrompt');
         this.backToConfigBtn = document.getElementById('backToConfigBtn');
@@ -38,6 +41,114 @@ class JiraConverter {
         this.startOverBtn = document.getElementById('startOverBtn');
         this.loader = document.getElementById('loader');
         this.loaderText = document.getElementById('loaderText');
+    }
+    
+    connectWebSocket() {
+        this.socket = io({
+            transports: ['websocket', 'polling'],
+            timeout: 60000,
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionAttempts: 5,
+            maxReconnectionAttempts: 5,
+            withCredentials: true,  // Send cookies with the connection
+            forceNew: false  // Reuse existing connection
+        });
+        
+        this.socket.on('connect', () => {
+            console.log('WebSocket connected');
+            if (this.reconnecting) {
+                this.hideConnectionError();
+                this.reconnecting = false;
+            }
+        });
+        
+        this.socket.on('disconnect', (reason) => {
+            console.log('WebSocket disconnected:', reason);
+            if (this.isProcessing) {
+                this.showError('Connection lost during processing. Attempting to reconnect...');
+                this.reconnecting = true;
+            }
+        });
+        
+        this.socket.on('connect_error', (error) => {
+            console.error('WebSocket connection error:', error);
+            if (this.isProcessing) {
+                this.showError('Connection error during processing. Please check your internet connection.');
+            }
+        });
+        
+        this.socket.on('reconnect', (attemptNumber) => {
+            console.log('WebSocket reconnected after', attemptNumber, 'attempts');
+            this.hideConnectionError();
+            this.reconnecting = false;
+        });
+        
+        this.socket.on('reconnect_failed', () => {
+            console.error('WebSocket reconnection failed');
+            if (this.isProcessing) {
+                this.showError('Could not reconnect to server. Please refresh the page and try again.');
+                this.hideLoader();
+                this.isProcessing = false;
+                this.canCancel = false;
+            }
+        });
+        
+        this.socket.on('processing-started', (data) => {
+            console.log('Processing started:', data);
+            this.updateProgress(0, data.message);
+        });
+        
+        this.socket.on('chunk-progress', (data) => {
+            console.log('Chunk progress:', data);
+            let progressText = data.status;
+            if (data.current && data.total) {
+                progressText += ` (${data.current}/${data.total})`;
+            }
+            this.updateProgress(data.progress || 0, progressText);
+        });
+        
+        this.socket.on('chunk-completed', (data) => {
+            console.log('Chunk completed:', data);
+            this.updateProgress(data.progress, `Completed chunk ${data.chunkIndex}`);
+            
+            if (data.partialResults && data.partialResults.length > 0) {
+                this.showPartialResults(data.partialResults);
+            }
+        });
+        
+        this.socket.on('processing-completed', (data) => {
+            console.log('Processing completed:', data);
+            this.hideLoader();
+            this.isProcessing = false;
+            this.canCancel = false;
+            
+            if (data.downloadReady) {
+                this.downloadUrl = '/download';
+                this.goToPhase(4);
+            } else {
+                this.achievements = data.achievements;
+                this.selectedAchievements = new Set(data.achievements);
+                this.setupPhase3();
+                this.goToPhase(3);
+            }
+        });
+        
+        this.socket.on('processing-error', (data) => {
+            console.error('Processing error:', data);
+            this.hideLoader();
+            this.isProcessing = false;
+            this.canCancel = false;
+            this.showError(data.error);
+        });
+        
+        this.socket.on('processing-cancelled', (data) => {
+            console.log('Processing cancelled:', data);
+            this.hideLoader();
+            this.isProcessing = false;
+            this.canCancel = false;
+            alert('Processing cancelled successfully');
+        });
     }
     
     setupEventListeners() {
@@ -51,11 +162,8 @@ class JiraConverter {
         this.downloadBtn.addEventListener('click', () => this.downloadFile());
         this.startOverBtn.addEventListener('click', () => this.startOver());
         
-        window.addEventListener('beforeunload', () => {
-            if (this.csvHeaders.length > 0) {
-                navigator.sendBeacon('/cleanup', JSON.stringify({}));
-            }
-        });
+        // Note: Removed beforeunload cleanup as it was interfering with downloads
+        // The download endpoint handles its own cleanup after successful download
     }
     
     setupDragAndDrop() {
@@ -127,188 +235,120 @@ class JiraConverter {
     }
     
     setupPhase2() {
-        this.renderFieldsSelection();
-    }
-    
-    setupPhase3() {
-        this.renderAchievementsSelection();
-    }
-    
-    renderFieldsSelection() {
-        const headers = [...new Set(this.csvHeaders)];
         this.fieldsContainer.innerHTML = '';
         
-        headers.forEach(header => {
-            const fieldItem = document.createElement('div');
-            fieldItem.className = 'field-item';
+        this.csvHeaders.forEach(header => {
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'field-item';
             
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.id = `field-${header}`;
             checkbox.checked = this.selectedFields.has(header);
-            checkbox.addEventListener('change', () => this.toggleField(header));
+            checkbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    this.selectedFields.add(header);
+                } else {
+                    this.selectedFields.delete(header);
+                }
+            });
             
             const label = document.createElement('label');
             label.htmlFor = `field-${header}`;
             label.textContent = header;
-            label.style.cursor = 'pointer';
-            label.style.flex = '1';
             
-            fieldItem.appendChild(checkbox);
-            fieldItem.appendChild(label);
-            this.fieldsContainer.appendChild(fieldItem);
+            fieldDiv.appendChild(checkbox);
+            fieldDiv.appendChild(label);
+            this.fieldsContainer.appendChild(fieldDiv);
         });
     }
     
-    toggleField(header) {
-        if (this.selectedFields.has(header)) {
-            this.selectedFields.delete(header);
-        } else {
-            this.selectedFields.add(header);
-        }
-    }
-    
-    renderAchievementsSelection() {
+    setupPhase3() {
         this.achievementsContainer.innerHTML = '';
-    
-        // Add event listeners for select all/none
-        document.getElementById('selectAllBtn').addEventListener('click', () => {
-            this.selectedAchievements = new Set(this.achievements);
-            this.renderAchievementsSelection();
-        });
         
-        document.getElementById('selectNoneBtn').addEventListener('click', () => {
-            this.selectedAchievements.clear();
-            this.renderAchievementsSelection();
-        });
-        
-        // Render individual achievements
         this.achievements.forEach((achievement, index) => {
-            const achievementItem = document.createElement('div');
-            achievementItem.className = 'achievement-item';
+            const achievementDiv = document.createElement('div');
+            achievementDiv.className = 'achievement-item';
             
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.className = 'achievement-checkbox';
             checkbox.id = `achievement-${index}`;
             checkbox.checked = this.selectedAchievements.has(achievement);
-            checkbox.addEventListener('change', () => this.toggleAchievement(achievement));
-            
-            const text = document.createElement('div');
-            text.className = 'achievement-text';
-            text.textContent = achievement;
-            text.addEventListener('click', () => {
-                checkbox.checked = !checkbox.checked;
-                this.toggleAchievement(achievement);
+            checkbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    this.selectedAchievements.add(achievement);
+                } else {
+                    this.selectedAchievements.delete(achievement);
+                }
             });
             
-            achievementItem.appendChild(checkbox);
-            achievementItem.appendChild(text);
+            const label = document.createElement('label');
+            label.htmlFor = `achievement-${index}`;
+            label.textContent = achievement;
             
-            if (!this.selectedAchievements.has(achievement)) {
-                achievementItem.classList.add('disabled');
-            }
-            
-            this.achievementsContainer.appendChild(achievementItem);
+            achievementDiv.appendChild(checkbox);
+            achievementDiv.appendChild(label);
+            this.achievementsContainer.appendChild(achievementDiv);
         });
     }
     
-    toggleAchievement(achievement) {
-        if (this.selectedAchievements.has(achievement)) {
-            this.selectedAchievements.delete(achievement);
-        } else {
-            this.selectedAchievements.add(achievement);
-        }
-        this.renderAchievementsSelection();
-    }
-    
-    async reprocessAchievements() {
-        if (this.selectedAchievements.size === 0) {
-            alert('Please select at least one achievement to include.');
-            return;
-        }
-        
-        this.showLoader('Applying changes and finalizing...');
-        
-        const requestData = {
-            selectedAchievements: Array.from(this.selectedAchievements),
-            additionalPrompt: this.additionalPromptTextarea.value.trim()
-        };
-        
-        try {
-            const response = await fetch('/reprocess', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestData)
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                this.downloadUrl = result.downloadUrl;
-                this.goToPhase(4);
-            } else {
-                alert('Reprocessing failed: ' + result.error);
-            }
-        } catch (error) {
-            alert('Reprocessing failed: ' + error.message);
-        } finally {
-            this.hideLoader();
-        }
-    }
-    
-    async processFile() {
+    processFile() {
         if (this.selectedFields.size === 0) {
             alert('Please select at least one field to include in the output.');
             return;
         }
         
-        this.showLoader('Processing file, this may take a while, please don\'t close this tab...');
+        if (this.isProcessing) {
+            alert('Processing already in progress.');
+            return;
+        }
+        
+        this.showLoader('Starting processing...', true);
+        this.isProcessing = true;
+        this.canCancel = true;
         
         const requestData = {
             selectedFields: Array.from(this.selectedFields),
             aiPrompt: this.aiPromptTextarea.value.trim(),
         };
         
-        try {
-            const response = await fetch('/process', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestData)
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                this.achievements = result.achievements;
-                this.selectedAchievements = new Set(result.achievements);
-                this.setupPhase3();
-                this.goToPhase(3);
-            } else {
-                alert('Processing failed: ' + result.error);
-            }
-        } catch (error) {
-            alert('Processing failed: ' + error.message);
-        } finally {
+        this.socket.emit('start-processing', requestData);
+    }
+    
+    reprocessAchievements() {
+        if (this.selectedAchievements.size === 0) {
+            alert('Please select at least one achievement to include.');
+            return;
+        }
+        
+        if (this.isProcessing) {
+            alert('Processing already in progress.');
+            return;
+        }
+        
+        this.showLoader('Starting reprocessing...', true);
+        this.isProcessing = true;
+        this.canCancel = true;
+        
+        const requestData = {
+            selectedAchievements: Array.from(this.selectedAchievements),
+            additionalPrompt: this.additionalPromptTextarea.value.trim()
+        };
+        
+        this.socket.emit('start-reprocessing', requestData);
+    }
+    
+    cancelProcessing() {
+        if (this.canCancel) {
+            this.socket.emit('cancel-processing');
             this.hideLoader();
         }
     }
     
     async downloadFile() {
         if (this.downloadUrl) {
+            // The download endpoint will handle its own cleanup after successful download
             window.location.href = this.downloadUrl;
-            
-            setTimeout(async () => {
-                try {
-                    await fetch('/cleanup', { method: 'POST' });
-                } catch (error) {
-                    console.warn('Cleanup failed:', error);
-                }
-            }, 1000);
         }
     }
     
@@ -327,6 +367,8 @@ class JiraConverter {
         this.achievements = [];
         this.selectedAchievements = new Set();
         this.downloadUrl = '';
+        this.isProcessing = false;
+        this.canCancel = false;
         
         this.csvFileInput.value = '';
         this.aiPromptTextarea.value = '';
@@ -335,6 +377,13 @@ class JiraConverter {
         this.achievementsContainer.innerHTML = '';
         
         this.goToPhase(1);
+    }
+    
+    goToPhase(phase) {
+        Object.values(this.phases).forEach(p => p.classList.remove('active'));
+        this.phases[phase].classList.add('active');
+        this.currentPhase = phase;
+        this.updateProgressBar(phase);
     }
     
     updateProgressBar(currentPhase) {
@@ -348,30 +397,134 @@ class JiraConverter {
                 step.classList.add('active');
             }
         });
-    }
-    
-    goToPhase(phase) {
-        Object.values(this.phases).forEach(phaseEl => {
-            phaseEl.classList.remove('active');
+        
+        const progressFills = document.querySelectorAll('.progress-fill');
+        progressFills.forEach((fill, index) => {
+            if (index < currentPhase - 1) {
+                fill.style.width = '100%';
+            } else {
+                fill.style.width = '0%';
+            }
         });
-        
-        this.phases[phase].classList.add('active');
-        this.currentPhase = phase;
-        this.updateProgressBar(phase);
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     
-    showLoader(text = 'Loading...') {
+    showLoader(text, showCancel = false) {
         this.loaderText.textContent = text;
         this.loader.classList.remove('hidden');
+        
+        let existingCancelBtn = this.loader.querySelector('.cancel-btn');
+        if (existingCancelBtn) {
+            existingCancelBtn.remove();
+        }
+        
+        if (showCancel) {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Cancel Processing';
+            cancelBtn.className = 'btn btn-secondary cancel-btn';
+            cancelBtn.style.marginTop = '20px';
+            cancelBtn.addEventListener('click', () => this.cancelProcessing());
+            this.loader.appendChild(cancelBtn);
+        }
     }
     
     hideLoader() {
         this.loader.classList.add('hidden');
+        
+        let existingCancelBtn = this.loader.querySelector('.cancel-btn');
+        if (existingCancelBtn) {
+            existingCancelBtn.remove();
+        }
+        
+        let existingProgress = this.loader.querySelector('.processing-progress');
+        if (existingProgress) {
+            existingProgress.remove();
+        }
+        
+        let existingPartial = this.loader.querySelector('.partial-results');
+        if (existingPartial) {
+            existingPartial.remove();
+        }
+    }
+    
+    updateProgress(progress, text) {
+        this.loaderText.textContent = text;
+        
+        let progressDiv = this.loader.querySelector('.processing-progress');
+        if (!progressDiv) {
+            progressDiv = document.createElement('div');
+            progressDiv.className = 'processing-progress';
+            progressDiv.style.marginTop = '20px';
+            progressDiv.style.width = '100%';
+            this.loader.appendChild(progressDiv);
+        }
+        
+        progressDiv.innerHTML = `
+            <div style="background: #e0e0e0; border-radius: 10px; overflow: hidden; margin-top: 10px;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 20px; border-radius: 10px; transition: width 0.3s ease; width: ${progress || 0}%;"></div>
+            </div>
+            <div style="text-align: center; margin-top: 5px; font-size: 14px; color: #666;">
+                ${progress ? Math.round(progress) + '%' : ''}
+            </div>
+        `;
+    }
+    
+    showPartialResults(results) {
+        let partialDiv = this.loader.querySelector('.partial-results');
+        if (!partialDiv) {
+            partialDiv = document.createElement('div');
+            partialDiv.className = 'partial-results';
+            partialDiv.style.marginTop = '20px';
+            partialDiv.style.textAlign = 'left';
+            partialDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+            partialDiv.style.padding = '15px';
+            partialDiv.style.borderRadius = '8px';
+            partialDiv.style.fontSize = '14px';
+            this.loader.appendChild(partialDiv);
+        }
+        
+        partialDiv.innerHTML = `
+            <div style="font-weight: bold; margin-bottom: 10px; color: #333;">Latest Results Preview:</div>
+            ${results.map(result => `<div style="margin-bottom: 5px; color: #555;">${result}</div>`).join('')}
+        `;
+    }
+    
+    showError(message) {
+        this.hideConnectionError(); // Clear any existing error
+        
+        let errorDiv = document.createElement('div');
+        errorDiv.className = 'connection-error';
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #dc3545;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1001;
+            max-width: 300px;
+            font-size: 14px;
+            line-height: 1.4;
+        `;
+        errorDiv.textContent = message;
+        
+        document.body.appendChild(errorDiv);
+        
+        // Auto-hide non-critical errors after 5 seconds
+        if (!message.includes('refresh') && !message.includes('reconnect')) {
+            setTimeout(() => {
+                this.hideConnectionError();
+            }, 5000);
+        }
+    }
+    
+    hideConnectionError() {
+        const existingError = document.querySelector('.connection-error');
+        if (existingError) {
+            existingError.remove();
+        }
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    new JiraConverter();
-}); 
+const converter = new JiraConverter(); 

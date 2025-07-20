@@ -111,10 +111,12 @@
                     <p>Review your processed achievements and toggle off any you don't want to include:</p>
                     
 					<div id="achievementsContainerParent">
-						<h3>Select achievements to include:</h3>
-						<div class="achievements-actions">
-							<button class="btn" id="selectAllBtn">Select All</button>
-							<button class="btn" id="selectNoneBtn">Select None</button>
+						<div class="achievements-header">
+							<h3>Select achievements to include:</h3>
+							<div class="achievements-actions">
+								<button class="btn" id="selectAllBtn">Select All</button>
+								<button class="btn" id="selectNoneBtn">Select None</button>
+							</div>
 						</div>
 						<div id="achievementsContainer" class="achievements-container">
 							<!-- Achievements will be populated here -->
@@ -157,6 +159,7 @@
         </main>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
 </html> 
