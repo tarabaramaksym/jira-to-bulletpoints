@@ -1,0 +1,9 @@
+Please reprocess the following achievements based on the additional instructions:
+
+ACHIEVEMENTS:
+{{ACHIEVEMENTS}}
+
+ADDITIONAL INSTRUCTIONS:
+{{ADDITIONAL_PROMPT}}
+
+Please modify the achievements according to the instructions while maintaining their professional quality and resume-worthy nature. Return only the modified achievements, one per line. 

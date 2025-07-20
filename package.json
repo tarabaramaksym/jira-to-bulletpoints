@@ -1,7 +1,7 @@
 {
 	"name": "jira-to-bulletpoints",
 	"version": "1.0.0",
-	"main": "index.js",
+	"main": "src/server.js",
 	"dependencies": {
 		"accepts": "^2.0.0",
 		"body-parser": "^2.2.0",

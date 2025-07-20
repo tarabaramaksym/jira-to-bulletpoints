@@ -10,6 +10,8 @@ class AIService {
         this.systemPrompt = this.loadPrompt('system-prompt.txt');
         this.chunkProcessingPrompt = this.loadPrompt('chunk-processing.txt');
         this.deduplicationPrompt = this.loadPrompt('deduplication.txt');
+        this.reprocessPrompt = this.loadPrompt('reprocess-achievements.txt');
+        this.userPromptTemplate = this.loadPrompt('user-prompt-template.txt');
     }
 
     loadPrompt(filename) {
@@ -19,6 +21,14 @@ class AIService {
         } catch (error) {
             throw new Error(`Failed to load prompt file: ${filename}`);
         }
+    }
+
+    getAchievementsPrompt() {
+        return this.reprocessPrompt;
+    }
+
+    getUserPromptTemplate() {
+        return this.userPromptTemplate;
     }
 
     async processChunk(jiraData, userPrompt) {
@@ -50,7 +60,8 @@ class AIService {
         let prompt = this.chunkProcessingPrompt.replace('{{JIRA_DATA}}', jiraData);
         
         if (userPrompt && userPrompt.trim()) {
-            prompt = prompt.replace('{{USER_PROMPT}}', `\nAdditional instructions: ${userPrompt}\n`);
+            const userInstructions = this.userPromptTemplate.replace('{{USER_PROMPT}}', userPrompt);
+            prompt = prompt.replace('{{USER_PROMPT}}', `\n${userInstructions}\n`);
         } else {
             prompt = prompt.replace('{{USER_PROMPT}}', '');
         }
@@ -97,21 +108,14 @@ class AIService {
             
             return response.choices[0].message.content.includes('AI service is working');
         } catch (error) {
-            console.error('AI service connection test failed:', error);
             return false;
         }
     }
 
     async reprocessAchievements(achievementsText, additionalPrompt) {
-        const prompt = `Please reprocess the following achievements based on the additional instructions:
-
-ACHIEVEMENTS:
-${achievementsText}
-
-ADDITIONAL INSTRUCTIONS:
-${additionalPrompt}
-
-Please modify the achievements according to the instructions while maintaining their professional quality and resume-worthy nature. Return only the modified achievements, one per line.`;
+        const prompt = this.reprocessPrompt
+            .replace('{{ACHIEVEMENTS}}', achievementsText)
+            .replace('{{ADDITIONAL_PROMPT}}', additionalPrompt);
         
         return await this.makeRequestWithRetry(async () => {
             const response = await this.client.chat.completions.create({
@@ -139,21 +143,15 @@ Please modify the achievements according to the instructions while maintaining t
             try {
                 return await requestFn();
             } catch (error) {
-                console.error(`Error in ${operation} (attempt ${attempt}/${maxRetries}):`, error.message);
-                
-                // Handle rate limiting specifically
                 if (error.status === 429 || error.code === 'rate_limit_exceeded') {
                     if (attempt < maxRetries) {
-                        const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
-                        console.log(`Rate limit hit. Waiting ${delay}ms before retry...`);
+                        const delay = Math.pow(2, attempt) * 1000;
                         await this.sleep(delay);
                         continue;
                     }
                 }
                 
-                // Handle token limit errors
                 if (error.message && error.message.includes('tokens per min')) {
-                    console.error('Token limit exceeded. Consider reducing chunk size.');
                     throw new Error('Request too large: Token limit exceeded. Try processing smaller chunks.');
                 }
                 
