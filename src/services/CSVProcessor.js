@@ -3,9 +3,9 @@ const { Readable } = require('stream');
 
 class CSVProcessor {
     constructor(chunkSize = 50) {
-        this.chunkSize = chunkSize; // Even smaller default for safety
-        this.maxTokensPerRequest = 80000; // Conservative limit for 128k context window (leaves room for prompts + response)
-        this.tokensPerCharEstimate = 0.3; // More conservative estimate: ~3.3 chars per token
+        this.chunkSize = chunkSize;
+        this.maxTokensPerRequest = 80000;
+        this.tokensPerCharEstimate = 0.3;
     }
 
     async parseCsvData(csvContent, selectedFields) {
@@ -23,7 +23,6 @@ class CSVProcessor {
                         }
                     });
                     
-                    // Only add row if it has some content
                     if (Object.values(filteredRow).some(value => value.trim())) {
                         results.push(filteredRow);
                     }
@@ -37,7 +36,6 @@ class CSVProcessor {
         });
     }
 
-    // Helper method to get headers from CSV content
     async getHeaders(csvContent) {
         return new Promise((resolve, reject) => {
             const stream = Readable.from([csvContent]);
@@ -57,18 +55,15 @@ class CSVProcessor {
         });
     }
 
-    // Estimate token count for text (rough approximation)
     estimateTokens(text) {
         return Math.ceil(text.length * this.tokensPerCharEstimate);
     }
 
-    // Estimate tokens for a chunk of data when formatted for AI
     estimateChunkTokens(chunk) {
         const formattedText = this.formatChunkForAI(chunk);
         return this.estimateTokens(formattedText);
     }
 
-    // Create dynamic chunks based on token limits
     createChunks(data) {
         const chunks = [];
         let currentChunk = [];
@@ -77,23 +72,19 @@ class CSVProcessor {
         for (let i = 0; i < data.length; i++) {
             const record = data[i];
             
-            // Estimate tokens for this record
             const recordText = Object.values(record).join(' ');
             const recordTokens = this.estimateTokens(recordText);
             
-            // If adding this record would exceed token limit, start a new chunk
             if (currentChunk.length > 0 && (currentTokens + recordTokens) > this.maxTokensPerRequest) {
                 chunks.push(currentChunk);
                 currentChunk = [];
                 currentTokens = 0;
             }
             
-            // Add record to current chunk
             currentChunk.push(record);
             currentTokens += recordTokens;
         }
         
-        // Add the last chunk if it has data
         if (currentChunk.length > 0) {
             chunks.push(currentChunk);
         }
@@ -101,7 +92,6 @@ class CSVProcessor {
         return chunks;
     }
 
-    // Legacy method for backward compatibility
     createStaticChunks(data) {
         const chunks = [];
         for (let i = 0; i < data.length; i += this.chunkSize) {
@@ -152,7 +142,6 @@ class CSVProcessor {
         const chunkCount = chunks.length;
         const avgChunkSize = chunkCount > 0 ? Math.round(totalRecords / chunkCount) : 0;
         
-        // Calculate token estimates
         const totalEstimatedTokens = chunks.reduce((total, chunk) => {
             return total + this.estimateChunkTokens(chunk);
         }, 0);
