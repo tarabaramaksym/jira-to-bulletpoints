@@ -489,6 +489,7 @@ header p {
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    padding: 40px 20px;
 }
 
 .loader.hidden {
@@ -539,11 +540,75 @@ header p {
     max-width: 400px;
 }
 
+.loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 600px;
+    height: 100%;
+}
+
+.loader-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+}
+
+.loader-preview {
+    flex: 0 0 250px;
+    width: 100%;
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+}
+
 .partial-results {
-    max-width: 500px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    max-height: 200px;
+    width: 100%;
+    height: 100%;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
     overflow-y: auto;
+    display: none;
+}
+
+.partial-results.visible {
+    display: block;
+}
+
+.progress-container-inline {
+    width: 100%;
+    max-width: 400px;
+    margin-top: 20px;
+}
+
+.preview-header {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 14px;
+}
+
+.results-content {
+    color: #555;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.results-content div {
+    margin-bottom: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.results-content div:last-child {
+    border-bottom: none;
 }
 
 .partial-results::-webkit-scrollbar {

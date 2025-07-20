@@ -304,11 +304,12 @@ async function processWithSessionData(socket, data, sessionData, sessionId) {
       const parsedData = await csvProcessor.parseCsvData(csvContent, selectedFields);
       const chunks = csvProcessor.createChunks(parsedData);
       const totalChunks = chunks.length;
+      const totalSteps = totalChunks + 1; // Include deduplication as final step
       
       socket.emit('chunk-progress', { 
         current: 0, 
-        total: totalChunks, 
-        status: `Starting processing of ${totalChunks} chunks...` 
+        total: totalSteps, 
+        status: `Starting processing of ${totalChunks} chunks + deduplication...` 
       });
 
       const processedChunks = [];
@@ -321,10 +322,12 @@ async function processWithSessionData(socket, data, sessionData, sessionId) {
         }
 
         const chunk = chunks[i];
+        const currentStep = i + 1;
+        
         socket.emit('chunk-progress', { 
-          current: i + 1, 
-          total: totalChunks, 
-          status: `Processing chunk ${i + 1} of ${totalChunks}...` 
+          current: currentStep, 
+          total: totalSteps, 
+          status: `Processing data chunk ${currentStep} of ${totalChunks}...` 
         });
 
         try {
@@ -333,29 +336,36 @@ async function processWithSessionData(socket, data, sessionData, sessionId) {
           processedChunks.push(chunkResult);
           
           socket.emit('chunk-completed', { 
-            chunkIndex: i + 1, 
-            progress: Math.round(((i + 1) / totalChunks) * 80), // 80% for chunk processing
+            chunkIndex: currentStep, 
+            progress: Math.round((currentStep / totalSteps) * 100),
             partialResults: chunkResult.split('\n').filter(line => line.trim()).slice(0, 3) // Preview
           });
         } catch (chunkError) {
-          console.error(`Error processing chunk ${i + 1}:`, chunkError.message);
+          console.error(`Error processing chunk ${currentStep}:`, chunkError.message);
           socket.emit('processing-error', { 
-            error: `Failed to process chunk ${i + 1}: ${chunkError.message}`,
+            error: `Failed to process chunk ${currentStep}: ${chunkError.message}`,
             canRetry: true 
           });
           return;
         }
       }
 
-      // Final deduplication
+      // Final deduplication step
       socket.emit('chunk-progress', { 
-        current: totalChunks, 
-        total: totalChunks, 
+        current: totalSteps, 
+        total: totalSteps, 
         status: 'Performing final deduplication...' 
       });
 
       const combinedBulletpoints = csvProcessor.combineChunksForDeduplication(processedChunks);
       const finalResult = await aiService.deduplicateBulletpoints(combinedBulletpoints);
+      
+      // Emit completion of deduplication step
+      socket.emit('chunk-completed', { 
+        chunkIndex: totalSteps, 
+        progress: 100,
+        partialResults: ['Deduplication completed successfully']
+      });
       
       const achievements = finalResult.split('\n')
         .filter(line => line.trim())
@@ -492,10 +502,18 @@ async function reprocessWithSessionData(socket, data, sessionData, sessionId) {
 
     let finalAchievements = selectedAchievements;
 
+    const totalSteps = additionalPrompt && additionalPrompt.trim() && aiService ? 2 : 1; // 1 for selection, 1 for reprocessing (if applicable)
+    
+    socket.emit('chunk-progress', { 
+      current: 1, 
+      total: totalSteps, 
+      status: totalSteps === 2 ? 'Preparing selected achievements...' : 'Finalizing selected achievements...' 
+    });
+
     if (additionalPrompt && additionalPrompt.trim() && aiService) {
       socket.emit('chunk-progress', { 
-        current: 1, 
-        total: 1, 
+        current: 2, 
+        total: totalSteps, 
         status: 'Applying additional processing...' 
       });
 
@@ -506,6 +524,20 @@ async function reprocessWithSessionData(socket, data, sessionData, sessionId) {
         .filter(line => line.trim())
         .map(line => line.replace(/^[\s\-\*•]+/, '').trim())
         .filter(line => line.length > 0);
+      
+      // Emit completion of reprocessing step
+      socket.emit('chunk-completed', { 
+        chunkIndex: totalSteps, 
+        progress: 100,
+        partialResults: ['Additional processing completed successfully']
+      });
+    } else {
+      // Emit completion of selection step (when no reprocessing)
+      socket.emit('chunk-completed', { 
+        chunkIndex: 1, 
+        progress: 100,
+        partialResults: ['Achievement selection completed']
+      });
     }
 
     // Save achievements to temporary file

@@ -110,7 +110,7 @@ class JiraConverter {
         
         this.socket.on('chunk-completed', (data) => {
             console.log('Chunk completed:', data);
-            this.updateProgress(data.progress, `Completed chunk ${data.chunkIndex}`);
+            this.updateProgress(data.progress, `Completed step ${data.chunkIndex}`);
             
             if (data.partialResults && data.partialResults.length > 0) {
                 this.showPartialResults(data.partialResults);
@@ -430,62 +430,54 @@ class JiraConverter {
     hideLoader() {
         this.loader.classList.add('hidden');
         
-        let existingCancelBtn = this.loader.querySelector('.cancel-btn');
-        if (existingCancelBtn) {
-            existingCancelBtn.remove();
+        // Reset the fixed structure instead of removing elements
+        const progressContainer = document.getElementById('progressContainer');
+        if (progressContainer) {
+            progressContainer.innerHTML = '';
         }
         
-        let existingProgress = this.loader.querySelector('.processing-progress');
-        if (existingProgress) {
-            existingProgress.remove();
+        const partialResultsDiv = document.getElementById('partialResults');
+        const resultsContent = document.getElementById('resultsContent');
+        if (partialResultsDiv && resultsContent) {
+            partialResultsDiv.classList.remove('visible');
+            resultsContent.innerHTML = '';
         }
         
-        let existingPartial = this.loader.querySelector('.partial-results');
-        if (existingPartial) {
-            existingPartial.remove();
+        const cancelBtn = document.getElementById('cancelBtn');
+        if (cancelBtn) {
+            cancelBtn.style.display = 'none';
         }
     }
     
     updateProgress(progress, text) {
         this.loaderText.textContent = text;
         
-        let progressDiv = this.loader.querySelector('.processing-progress');
-        if (!progressDiv) {
-            progressDiv = document.createElement('div');
-            progressDiv.className = 'processing-progress';
-            progressDiv.style.marginTop = '20px';
-            progressDiv.style.width = '100%';
-            this.loader.appendChild(progressDiv);
+        const progressContainer = document.getElementById('progressContainer');
+        if (progressContainer) {
+            progressContainer.innerHTML = `
+                <div style="background: #e0e0e0; border-radius: 10px; overflow: hidden; margin-top: 10px;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 20px; border-radius: 10px; transition: width 0.3s ease; width: ${progress || 0}%;"></div>
+                </div>
+                <div style="text-align: center; margin-top: 5px; font-size: 14px; color: #666;">
+                    ${progress ? Math.round(progress) + '%' : ''}
+                </div>
+            `;
         }
-        
-        progressDiv.innerHTML = `
-            <div style="background: #e0e0e0; border-radius: 10px; overflow: hidden; margin-top: 10px;">
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 20px; border-radius: 10px; transition: width 0.3s ease; width: ${progress || 0}%;"></div>
-            </div>
-            <div style="text-align: center; margin-top: 5px; font-size: 14px; color: #666;">
-                ${progress ? Math.round(progress) + '%' : ''}
-            </div>
-        `;
     }
     
     showPartialResults(results) {
-        let partialDiv = this.loader.querySelector('.partial-results');
-        if (!partialDiv) {
-            partialDiv = document.createElement('div');
-            partialDiv.className = 'partial-results';
-            partialDiv.style.marginTop = '20px';
-            partialDiv.style.textAlign = 'left';
-            partialDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-            partialDiv.style.padding = '15px';
-            partialDiv.style.borderRadius = '8px';
-            partialDiv.style.fontSize = '14px';
-            this.loader.appendChild(partialDiv);
-        }
+        const partialResultsDiv = document.getElementById('partialResults');
+        const resultsContent = document.getElementById('resultsContent');
         
-        partialDiv.innerHTML = `
-            <div style="font-weight: bold; margin-bottom: 10px; color: #333;">Latest Results Preview:</div>
-            ${results.map(result => `<div style="margin-bottom: 5px; color: #555;">${result}</div>`).join('')}
-        `;
+        if (partialResultsDiv && resultsContent) {
+            // Show the partial results area
+            partialResultsDiv.classList.add('visible');
+            
+            // Update the content
+            resultsContent.innerHTML = results.map(result => 
+                `<div>${result}</div>`
+            ).join('');
+        }
     }
     
     showError(message) {

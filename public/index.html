@@ -153,8 +153,20 @@
             </div>
 
             <div id="loader" class="loader hidden">
-                <div class="spinner"></div>
-                <p id="loaderText">Processing your file...</p>
+                <div class="loader-content">
+                    <div class="loader-main">
+                        <div class="spinner"></div>
+                        <p id="loaderText">Processing your file...</p>
+                        <div id="progressContainer" class="progress-container-inline"></div>
+                        <button id="cancelBtn" class="cancel-btn" style="display: none;">Cancel Processing</button>
+                    </div>
+                    <div class="loader-preview">
+                        <div class="partial-results" id="partialResults">
+                            <div class="preview-header">Latest Results Preview:</div>
+                            <div class="results-content" id="resultsContent"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
